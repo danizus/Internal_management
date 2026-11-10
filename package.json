@@ -1,0 +1,27 @@
+{
+  "name": "tam",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "npm run dev -w apps/api & npm run dev -w apps/web",
+    "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
+    "typecheck": "npm run typecheck -w apps/api && npm run typecheck -w apps/web",
+    "test": "npm run test -w apps/api",
+    "build": "npm run build -w apps/api && npm run build -w apps/web"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@eslint/js": "^10.0.1",
+    "eslint": "9.17.0",
+    "prettier": "3.4.2",
+    "typescript": "5.7.2",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.5"
+  }
+}
