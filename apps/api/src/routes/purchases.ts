@@ -5,14 +5,14 @@ import {
   nonNegativeMinorAmountSchema,
   currencyCodeSchema,
 } from "../schemas/common.js";
+import { purchasesController } from "../controllers/purchases.controller.js";
+import { requireAuth } from "../middleware/auth.js";
 import {
-  listPurchasesService,
-  getPurchaseByIdService,
-  createPurchaseService,
-  updatePurchaseService,
-  fulfillPurchaseService,
-  deletePurchaseService,
-} from "../services/purchases.service.js";
+  validateBody,
+  validateParams,
+  validateQuery,
+} from "../middleware/validate.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const purchasesRouter = Router();
 
@@ -101,64 +101,42 @@ const fulfillPurchaseSchema = z.object({
   processing_charges_minor: nonNegativeMinorAmountSchema.optional(),
 });
 
-purchasesRouter.get("/purchases", async (req, res, next) => {
-  try {
-    const filter = listPurchasesQuerySchema.parse(req.query);
-    const purchases = await listPurchasesService(filter);
-    res.json({ ok: true, data: purchases });
-  } catch (err) {
-    next(err);
-  }
-});
+purchasesRouter.use("/purchases", requireAuth);
 
-purchasesRouter.get("/purchases/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const purchase = await getPurchaseByIdService(id);
-    res.json({ ok: true, data: purchase });
-  } catch (err) {
-    next(err);
-  }
-});
+purchasesRouter.get(
+  "/purchases",
+  validateQuery(listPurchasesQuerySchema),
+  asyncHandler(purchasesController.list)
+);
 
-purchasesRouter.post("/purchases", async (req, res, next) => {
-  try {
-    const body = createPurchaseSchema.parse(req.body);
-    const purchase = await createPurchaseService(body);
-    res.status(201).json({ ok: true, data: purchase });
-  } catch (err) {
-    next(err);
-  }
-});
+purchasesRouter.get(
+  "/purchases/:id",
+  validateParams(idParamSchema),
+  asyncHandler(purchasesController.getById)
+);
 
-purchasesRouter.post("/purchases/:id/fulfill", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const body = fulfillPurchaseSchema.parse(req.body);
-    const purchase = await fulfillPurchaseService(id, body);
-    res.json({ ok: true, data: purchase });
-  } catch (err) {
-    next(err);
-  }
-});
+purchasesRouter.post(
+  "/purchases",
+  validateBody(createPurchaseSchema),
+  asyncHandler(purchasesController.create)
+);
 
-purchasesRouter.patch("/purchases/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const body = updatePurchaseSchema.parse(req.body);
-    const purchase = await updatePurchaseService(id, body);
-    res.json({ ok: true, data: purchase });
-  } catch (err) {
-    next(err);
-  }
-});
+purchasesRouter.post(
+  "/purchases/:id/fulfill",
+  validateParams(idParamSchema),
+  validateBody(fulfillPurchaseSchema),
+  asyncHandler(purchasesController.fulfill)
+);
 
-purchasesRouter.delete("/purchases/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    await deletePurchaseService(id);
-    res.json({ ok: true, data: { purchase_id: id } });
-  } catch (err) {
-    next(err);
-  }
-});
+purchasesRouter.patch(
+  "/purchases/:id",
+  validateParams(idParamSchema),
+  validateBody(updatePurchaseSchema),
+  asyncHandler(purchasesController.update)
+);
+
+purchasesRouter.delete(
+  "/purchases/:id",
+  validateParams(idParamSchema),
+  asyncHandler(purchasesController.remove)
+);

@@ -15,12 +15,28 @@ if (typeof process.loadEnvFile === "function") {
   }
 }
 
+/**
+ * Normalizes connection strings:
+ * - Strips `jdbc:` prefix if copied from DBeaver / pgAdmin (e.g. `jdbc:postgresql://` -> `postgresql://`)
+ */
+function normalizeDatabaseUrl(url: string | undefined): string {
+  if (!url) {
+    return "postgres://postgres:karachi786@localhost:5432/internal_management";
+  }
+  let cleaned = url.trim();
+  if (cleaned.startsWith("jdbc:")) {
+    cleaned = cleaned.slice(5);
+  }
+  return cleaned;
+}
+
 const envSchema = z.object({
   API_PORT: z.coerce.number().default(4000),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z
     .string()
-    .default("postgres://postgres:karachi786@localhost:5432/postgres"),
+    .transform(normalizeDatabaseUrl)
+    .default("postgres://postgres:karachi786@localhost:5432/internal_management"),
   SESSION_SECRET: z
     .string()
     .min(16)

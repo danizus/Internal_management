@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "supertest";
 import { app } from "../app.js";
 import { pool } from "../db/pool.js";
+import { authHeader } from "./testAuth.js";
 
 describe("Phase 4: Clients API", () => {
   afterEach(() => {
@@ -29,6 +30,7 @@ describe("Phase 4: Clients API", () => {
 
     const res = await request(app)
       .get("/api/clients")
+      .set(authHeader())
       .query({ status: "active", q: "Daniyal" });
 
     expect(res.status).toBe(200);
@@ -50,13 +52,16 @@ describe("Phase 4: Clients API", () => {
       rowCount: 1,
     } as never);
 
-    const res = await request(app).post("/api/clients").send({
-      whmcs_client_id: "15",
-      client_name: "Test Client",
-      client_email: "  TEST@EXAMPLE.COM  ",
-      company_name: "Test Org",
-      status: "active",
-    });
+    const res = await request(app)
+      .post("/api/clients")
+      .set(authHeader())
+      .send({
+        whmcs_client_id: "15",
+        client_name: "Test Client",
+        client_email: "  TEST@EXAMPLE.COM  ",
+        company_name: "Test Org",
+        status: "active",
+      });
 
     expect(res.status).toBe(201);
     expect(res.body.data.client_email).toBe("test@example.com");
@@ -72,11 +77,14 @@ describe("Phase 4: Clients API", () => {
     });
     vi.spyOn(pool, "query").mockRejectedValueOnce(pgErr);
 
-    const res = await request(app).post("/api/clients").send({
-      whmcs_client_id: "15",
-      client_name: "Duplicate Client",
-      client_email: "dup@example.com",
-    });
+    const res = await request(app)
+      .post("/api/clients")
+      .set(authHeader())
+      .send({
+        whmcs_client_id: "15",
+        client_name: "Duplicate Client",
+        client_email: "dup@example.com",
+      });
 
     expect(res.status).toBe(409);
     expect(res.body.error.message).toContain("WHMCS Client ID");
@@ -90,6 +98,7 @@ describe("Phase 4: Clients API", () => {
 
     const res = await request(app)
       .patch("/api/clients/999")
+      .set(authHeader())
       .send({ client_name: "Nonexistent" });
 
     expect(res.status).toBe(404);
@@ -99,7 +108,9 @@ describe("Phase 4: Clients API", () => {
     const pgErr = Object.assign(new Error("fk constraint"), { code: "23503" });
     vi.spyOn(pool, "query").mockRejectedValueOnce(pgErr);
 
-    const res = await request(app).delete("/api/clients/201");
+    const res = await request(app)
+      .delete("/api/clients/201")
+      .set(authHeader());
     expect(res.status).toBe(409);
     expect(res.body.error.message).toContain("purchases or refunds reference it");
   });

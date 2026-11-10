@@ -1,13 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
 import { bigintIdSchema } from "../schemas/common.js";
-import {
-  listCountriesService,
-  getCountryByIdService,
-  createCountryService,
-  updateCountryService,
-  deleteCountryService,
-} from "../services/countries.service.js";
+import { countriesController } from "../controllers/countries.controller.js";
+import { requireAuth } from "../middleware/auth.js";
+import { validateBody, validateParams } from "../middleware/validate.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const countriesRouter = Router();
 
@@ -31,52 +28,34 @@ const idParamSchema = z.object({
   id: bigintIdSchema,
 });
 
-countriesRouter.get("/countries", async (req, res, next) => {
-  try {
-    const countries = await listCountriesService();
-    res.json({ ok: true, data: countries });
-  } catch (err) {
-    next(err);
-  }
-});
+countriesRouter.use("/countries", requireAuth);
 
-countriesRouter.get("/countries/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const country = await getCountryByIdService(id);
-    res.json({ ok: true, data: country });
-  } catch (err) {
-    next(err);
-  }
-});
+countriesRouter.get(
+  "/countries",
+  asyncHandler(countriesController.list)
+);
 
-countriesRouter.post("/countries", async (req, res, next) => {
-  try {
-    const body = createCountrySchema.parse(req.body);
-    const country = await createCountryService(body);
-    res.status(201).json({ ok: true, data: country });
-  } catch (err) {
-    next(err);
-  }
-});
+countriesRouter.get(
+  "/countries/:id",
+  validateParams(idParamSchema),
+  asyncHandler(countriesController.getById)
+);
 
-countriesRouter.patch("/countries/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const body = updateCountrySchema.parse(req.body);
-    const country = await updateCountryService(id, body);
-    res.json({ ok: true, data: country });
-  } catch (err) {
-    next(err);
-  }
-});
+countriesRouter.post(
+  "/countries",
+  validateBody(createCountrySchema),
+  asyncHandler(countriesController.create)
+);
 
-countriesRouter.delete("/countries/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    await deleteCountryService(id);
-    res.json({ ok: true, data: { country_id: id } });
-  } catch (err) {
-    next(err);
-  }
-});
+countriesRouter.patch(
+  "/countries/:id",
+  validateParams(idParamSchema),
+  validateBody(updateCountrySchema),
+  asyncHandler(countriesController.update)
+);
+
+countriesRouter.delete(
+  "/countries/:id",
+  validateParams(idParamSchema),
+  asyncHandler(countriesController.remove)
+);

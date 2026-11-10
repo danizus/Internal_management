@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "supertest";
 import { app } from "../app.js";
 import { pool } from "../db/pool.js";
+import { authHeader } from "./testAuth.js";
 
 describe("Phase 2: Countries Lookup API", () => {
   afterEach(() => {
@@ -23,7 +24,7 @@ describe("Phase 2: Countries Lookup API", () => {
       rowCount: 1,
     } as never);
 
-    const res = await request(app).get("/api/countries");
+    const res = await request(app).get("/api/countries").set(authHeader());
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true, data: mockRows });
   });
@@ -43,6 +44,7 @@ describe("Phase 2: Countries Lookup API", () => {
 
     const res = await request(app)
       .post("/api/countries")
+      .set(authHeader())
       .send({ country_name: "  United States ", iso_code: "us" });
 
     expect(res.status).toBe(201);
@@ -56,6 +58,7 @@ describe("Phase 2: Countries Lookup API", () => {
   it("POST /api/countries returns 400 on invalid ISO code", async () => {
     const res = await request(app)
       .post("/api/countries")
+      .set(authHeader())
       .send({ country_name: "Germany", iso_code: "GERMANY" });
 
     expect(res.status).toBe(400);
@@ -68,6 +71,7 @@ describe("Phase 2: Countries Lookup API", () => {
 
     const res = await request(app)
       .post("/api/countries")
+      .set(authHeader())
       .send({ country_name: "Germany", iso_code: "DE" });
 
     expect(res.status).toBe(409);
@@ -82,6 +86,7 @@ describe("Phase 2: Countries Lookup API", () => {
 
     const res = await request(app)
       .patch("/api/countries/999")
+      .set(authHeader())
       .send({ country_name: "Netherlands" });
 
     expect(res.status).toBe(404);
@@ -92,7 +97,7 @@ describe("Phase 2: Countries Lookup API", () => {
     const pgErr = Object.assign(new Error("fk constraint"), { code: "23503" });
     vi.spyOn(pool, "query").mockRejectedValueOnce(pgErr);
 
-    const res = await request(app).delete("/api/countries/1");
+    const res = await request(app).delete("/api/countries/1").set(authHeader());
 
     expect(res.status).toBe(409);
     expect(res.body.error.message).toContain("packages reference it");

@@ -5,13 +5,14 @@ import {
   nonNegativeMinorAmountSchema,
   currencyCodeSchema,
 } from "../schemas/common.js";
+import { displayPackagesController } from "../controllers/displayPackages.controller.js";
+import { requireAuth } from "../middleware/auth.js";
 import {
-  listDisplayPackagesService,
-  getDisplayPackageByIdService,
-  createDisplayPackageService,
-  updateDisplayPackageService,
-  deleteDisplayPackageService,
-} from "../services/displayPackages.service.js";
+  validateBody,
+  validateParams,
+  validateQuery,
+} from "../middleware/validate.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const displayPackagesRouter = Router();
 
@@ -58,59 +59,38 @@ const createDisplayPackageSchema = z.object({
 const updateDisplayPackageSchema = createDisplayPackageSchema
   .partial()
   .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one display package field must be provided",
+    message: "At least one package field must be provided",
   });
 
-displayPackagesRouter.get("/display-packages", async (req, res, next) => {
-  try {
-    const filter = listDisplayPackagesQuerySchema.parse(req.query);
-    const packages = await listDisplayPackagesService(filter);
-    res.json({ ok: true, data: packages });
-  } catch (err) {
-    next(err);
-  }
-});
+displayPackagesRouter.use("/display-packages", requireAuth);
 
-displayPackagesRouter.get("/display-packages/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const pkg = await getDisplayPackageByIdService(id);
-    res.json({ ok: true, data: pkg });
-  } catch (err) {
-    next(err);
-  }
-});
+displayPackagesRouter.get(
+  "/display-packages",
+  validateQuery(listDisplayPackagesQuerySchema),
+  asyncHandler(displayPackagesController.list)
+);
 
-displayPackagesRouter.post("/display-packages", async (req, res, next) => {
-  try {
-    const body = createDisplayPackageSchema.parse(req.body);
-    const pkg = await createDisplayPackageService(body);
-    res.status(201).json({ ok: true, data: pkg });
-  } catch (err) {
-    next(err);
-  }
-});
+displayPackagesRouter.get(
+  "/display-packages/:id",
+  validateParams(idParamSchema),
+  asyncHandler(displayPackagesController.getById)
+);
 
-displayPackagesRouter.patch("/display-packages/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const body = updateDisplayPackageSchema.parse(req.body);
-    const pkg = await updateDisplayPackageService(id, body);
-    res.json({ ok: true, data: pkg });
-  } catch (err) {
-    next(err);
-  }
-});
+displayPackagesRouter.post(
+  "/display-packages",
+  validateBody(createDisplayPackageSchema),
+  asyncHandler(displayPackagesController.create)
+);
+
+displayPackagesRouter.patch(
+  "/display-packages/:id",
+  validateParams(idParamSchema),
+  validateBody(updateDisplayPackageSchema),
+  asyncHandler(displayPackagesController.update)
+);
 
 displayPackagesRouter.delete(
   "/display-packages/:id",
-  async (req, res, next) => {
-    try {
-      const { id } = idParamSchema.parse(req.params);
-      await deleteDisplayPackageService(id);
-      res.json({ ok: true, data: { display_package_id: id } });
-    } catch (err) {
-      next(err);
-    }
-  }
+  validateParams(idParamSchema),
+  asyncHandler(displayPackagesController.remove)
 );

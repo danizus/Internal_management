@@ -1,13 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
 import { bigintIdSchema } from "../schemas/common.js";
+import { clientsController } from "../controllers/clients.controller.js";
+import { requireAuth } from "../middleware/auth.js";
 import {
-  listClientsService,
-  getClientByIdService,
-  createClientService,
-  updateClientService,
-  deleteClientService,
-} from "../services/clients.service.js";
+  validateBody,
+  validateParams,
+  validateQuery,
+} from "../middleware/validate.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const clientsRouter = Router();
 
@@ -37,53 +38,35 @@ const updateClientSchema = createClientSchema
     message: "At least one client field must be provided",
   });
 
-clientsRouter.get("/clients", async (req, res, next) => {
-  try {
-    const filter = listClientsQuerySchema.parse(req.query);
-    const clients = await listClientsService(filter);
-    res.json({ ok: true, data: clients });
-  } catch (err) {
-    next(err);
-  }
-});
+clientsRouter.use("/clients", requireAuth);
 
-clientsRouter.get("/clients/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const client = await getClientByIdService(id);
-    res.json({ ok: true, data: client });
-  } catch (err) {
-    next(err);
-  }
-});
+clientsRouter.get(
+  "/clients",
+  validateQuery(listClientsQuerySchema),
+  asyncHandler(clientsController.list)
+);
 
-clientsRouter.post("/clients", async (req, res, next) => {
-  try {
-    const body = createClientSchema.parse(req.body);
-    const client = await createClientService(body);
-    res.status(201).json({ ok: true, data: client });
-  } catch (err) {
-    next(err);
-  }
-});
+clientsRouter.get(
+  "/clients/:id",
+  validateParams(idParamSchema),
+  asyncHandler(clientsController.getById)
+);
 
-clientsRouter.patch("/clients/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const body = updateClientSchema.parse(req.body);
-    const client = await updateClientService(id, body);
-    res.json({ ok: true, data: client });
-  } catch (err) {
-    next(err);
-  }
-});
+clientsRouter.post(
+  "/clients",
+  validateBody(createClientSchema),
+  asyncHandler(clientsController.create)
+);
 
-clientsRouter.delete("/clients/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    await deleteClientService(id);
-    res.json({ ok: true, data: { client_id: id } });
-  } catch (err) {
-    next(err);
-  }
-});
+clientsRouter.patch(
+  "/clients/:id",
+  validateParams(idParamSchema),
+  validateBody(updateClientSchema),
+  asyncHandler(clientsController.update)
+);
+
+clientsRouter.delete(
+  "/clients/:id",
+  validateParams(idParamSchema),
+  asyncHandler(clientsController.remove)
+);

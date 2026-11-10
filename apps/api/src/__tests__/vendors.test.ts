@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "supertest";
 import { app } from "../app.js";
 import { pool } from "../db/pool.js";
+import { authHeader } from "./testAuth.js";
 
 describe("Phase 2: Vendors & Wholesale Vendor Packages API", () => {
   afterEach(() => {
@@ -27,7 +28,7 @@ describe("Phase 2: Vendors & Wholesale Vendor Packages API", () => {
       rowCount: 1,
     } as never);
 
-    const res = await request(app).get("/api/vendors");
+    const res = await request(app).get("/api/vendors").set(authHeader());
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true, data: mockVendors });
   });
@@ -35,6 +36,7 @@ describe("Phase 2: Vendors & Wholesale Vendor Packages API", () => {
   it("POST /api/vendors validates rating bounds and creates a vendor", async () => {
     const badRes = await request(app)
       .post("/api/vendors")
+      .set(authHeader())
       .send({ vendor_name: "Bad Vendor", vendor_rating: 6.5 });
     expect(badRes.status).toBe(400);
 
@@ -54,11 +56,14 @@ describe("Phase 2: Vendors & Wholesale Vendor Packages API", () => {
       rowCount: 1,
     } as never);
 
-    const okRes = await request(app).post("/api/vendors").send({
-      vendor_name: "Contabo",
-      vendor_website: "https://contabo.com",
-      vendor_rating: 4.1,
-    });
+    const okRes = await request(app)
+      .post("/api/vendors")
+      .set(authHeader())
+      .send({
+        vendor_name: "Contabo",
+        vendor_website: "https://contabo.com",
+        vendor_rating: 4.1,
+      });
 
     expect(okRes.status).toBe(201);
     expect(okRes.body.data.vendor_id).toBe("11");
@@ -97,6 +102,7 @@ describe("Phase 2: Vendors & Wholesale Vendor Packages API", () => {
 
     const res = await request(app)
       .get("/api/vendor-packages")
+      .set(authHeader())
       .query({
         vendor_id: "10",
         country_id: "1",
@@ -144,20 +150,23 @@ describe("Phase 2: Vendors & Wholesale Vendor Packages API", () => {
       rowCount: 1,
     } as never);
 
-    const res = await request(app).post("/api/vendor-packages").send({
-      vendor_id: "10",
-      country_id: "1",
-      package_name: "CPX31",
-      cpu_cores: "4 vCPU",
-      ram: "8 GB",
-      storage: "160 GB NVMe",
-      operating_system: "Debian 12",
-      bandwidth: "20 TB",
-      dedicated_ip: "1 IPv4",
-      price_minor: "1390",
-      currency: "usd",
-      billing_cycle: "monthly",
-    });
+    const res = await request(app)
+      .post("/api/vendor-packages")
+      .set(authHeader())
+      .send({
+        vendor_id: "10",
+        country_id: "1",
+        package_name: "CPX31",
+        cpu_cores: "4 vCPU",
+        ram: "8 GB",
+        storage: "160 GB NVMe",
+        operating_system: "Debian 12",
+        bandwidth: "20 TB",
+        dedicated_ip: "1 IPv4",
+        price_minor: "1390",
+        currency: "usd",
+        billing_cycle: "monthly",
+      });
 
     expect(res.status).toBe(201);
     expect(res.body.data.price_minor).toBe("1390");
@@ -188,7 +197,9 @@ describe("Phase 2: Vendors & Wholesale Vendor Packages API", () => {
       rowCount: 0,
     } as never);
 
-    const res = await request(app).delete("/api/vendor-packages/999");
+    const res = await request(app)
+      .delete("/api/vendor-packages/999")
+      .set(authHeader());
     expect(res.status).toBe(404);
   });
 });

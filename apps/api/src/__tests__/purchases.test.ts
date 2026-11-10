@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "supertest";
 import { app } from "../app.js";
 import { pool } from "../db/pool.js";
+import { authHeader } from "./testAuth.js";
 
 describe("Phase 4: Purchases & Order Fulfillment Lifecycle API", () => {
   afterEach(() => {
@@ -46,6 +47,7 @@ describe("Phase 4: Purchases & Order Fulfillment Lifecycle API", () => {
 
     const res = await request(app)
       .get("/api/purchases")
+      .set(authHeader())
       .query({ status: "active", vendor_id: "10", due_within_days: 7, q: "Daniyal" });
 
     expect(res.status).toBe(200);
@@ -75,14 +77,17 @@ describe("Phase 4: Purchases & Order Fulfillment Lifecycle API", () => {
       rowCount: 1,
     } as never);
 
-    const res = await request(app).post("/api/purchases").send({
-      client_id: "201",
-      display_package_id: "501",
-      sales_amount_minor: "1500",
-      processing_charges_minor: "50",
-      currency: "usd",
-      status: "pending_fulfillment",
-    });
+    const res = await request(app)
+      .post("/api/purchases")
+      .set(authHeader())
+      .send({
+        client_id: "201",
+        display_package_id: "501",
+        sales_amount_minor: "1500",
+        processing_charges_minor: "50",
+        currency: "usd",
+        status: "pending_fulfillment",
+      });
 
     expect(res.status).toBe(201);
     expect(res.body.data.status).toBe("pending_fulfillment");
@@ -137,6 +142,7 @@ describe("Phase 4: Purchases & Order Fulfillment Lifecycle API", () => {
 
     const res = await request(app)
       .post("/api/purchases/701/fulfill")
+      .set(authHeader())
       .send({
         vendor_id: "10",
         package_id: "101",
@@ -169,11 +175,14 @@ describe("Phase 4: Purchases & Order Fulfillment Lifecycle API", () => {
     });
     vi.spyOn(pool, "query").mockRejectedValueOnce(pgErr);
 
-    const res = await request(app).post("/api/purchases").send({
-      whmcs_service_id: "105",
-      client_id: "201",
-      sales_amount_minor: "1000",
-    });
+    const res = await request(app)
+      .post("/api/purchases")
+      .set(authHeader())
+      .send({
+        whmcs_service_id: "105",
+        client_id: "201",
+        sales_amount_minor: "1000",
+      });
 
     expect(res.status).toBe(409);
     expect(res.body.error.message).toContain("whmcs_service_id");
@@ -183,7 +192,9 @@ describe("Phase 4: Purchases & Order Fulfillment Lifecycle API", () => {
     const pgErr = Object.assign(new Error("fk constraint"), { code: "23503" });
     vi.spyOn(pool, "query").mockRejectedValueOnce(pgErr);
 
-    const res = await request(app).delete("/api/purchases/701");
+    const res = await request(app)
+      .delete("/api/purchases/701")
+      .set(authHeader());
     expect(res.status).toBe(409);
     expect(res.body.error.message).toContain("refunds reference it");
   });

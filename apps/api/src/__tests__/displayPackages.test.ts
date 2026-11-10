@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "supertest";
 import { app } from "../app.js";
 import { pool } from "../db/pool.js";
+import { authHeader } from "./testAuth.js";
 
 describe("Phase 3: Retail Catalog (display_packages) & Margin Calculator API", () => {
   afterEach(() => {
@@ -43,6 +44,7 @@ describe("Phase 3: Retail Catalog (display_packages) & Margin Calculator API", (
 
     const res = await request(app)
       .get("/api/display-packages")
+      .set(authHeader())
       .query({ country_id: "1", vendor_id: "10", is_active: "true", q: "Cloud" });
 
     expect(res.status).toBe(200);
@@ -70,7 +72,9 @@ describe("Phase 3: Retail Catalog (display_packages) & Margin Calculator API", (
       rowCount: 1,
     } as never);
 
-    const res = await request(app).get("/api/display-packages");
+    const res = await request(app)
+      .get("/api/display-packages")
+      .set(authHeader());
     expect(res.status).toBe(200);
     expect(res.body.data[0].estimated_margin_minor).toBeNull();
   });
@@ -81,7 +85,10 @@ describe("Phase 3: Retail Catalog (display_packages) & Margin Calculator API", (
       rowCount: 1,
     } as never);
 
-    const res = await request(app).post("/api/display-packages").send({
+    const res = await request(app)
+      .post("/api/display-packages")
+      .set(authHeader())
+      .send({
       whmcs_pid: "42",
       vendor_id: "10",
       default_vendor_package_id: "101",
@@ -130,7 +137,10 @@ describe("Phase 3: Retail Catalog (display_packages) & Margin Calculator API", (
     });
     vi.spyOn(pool, "query").mockRejectedValueOnce(pgErr);
 
-    const res = await request(app).post("/api/display-packages").send({
+    const res = await request(app)
+      .post("/api/display-packages")
+      .set(authHeader())
+      .send({
       whmcs_pid: "42",
       country_id: "1",
       package_name: "Duplicate PID Plan",
@@ -155,6 +165,7 @@ describe("Phase 3: Retail Catalog (display_packages) & Margin Calculator API", (
 
     const res = await request(app)
       .patch("/api/display-packages/999")
+      .set(authHeader())
       .send({ price_minor: "1500" });
 
     expect(res.status).toBe(404);
@@ -166,7 +177,9 @@ describe("Phase 3: Retail Catalog (display_packages) & Margin Calculator API", (
       rowCount: 1,
     } as never);
 
-    const res = await request(app).delete("/api/display-packages/501");
+    const res = await request(app)
+      .delete("/api/display-packages/501")
+      .set(authHeader());
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       ok: true,

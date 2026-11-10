@@ -5,18 +5,14 @@ import {
   nonNegativeMinorAmountSchema,
   currencyCodeSchema,
 } from "../schemas/common.js";
+import { vendorsController } from "../controllers/vendors.controller.js";
+import { requireAuth } from "../middleware/auth.js";
 import {
-  listVendorsService,
-  getVendorByIdService,
-  createVendorService,
-  updateVendorService,
-  deleteVendorService,
-  listVendorPackagesService,
-  getVendorPackageByIdService,
-  createVendorPackageService,
-  updateVendorPackageService,
-  deleteVendorPackageService,
-} from "../services/vendors.service.js";
+  validateBody,
+  validateParams,
+  validateQuery,
+} from "../middleware/validate.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const vendorsRouter = Router();
 
@@ -30,6 +26,10 @@ const billingCycleSchema = z.enum([
   "semi_annually",
   "annually",
 ]);
+
+const listVendorsQuerySchema = z.object({
+  q: z.string().trim().optional(),
+});
 
 const createVendorSchema = z.object({
   vendor_name: z.string().trim().min(1).max(150),
@@ -69,117 +69,79 @@ const createVendorPackageSchema = z.object({
   price_minor: nonNegativeMinorAmountSchema,
   currency: currencyCodeSchema,
   billing_cycle: billingCycleSchema.default("monthly"),
+  notes: z.string().trim().max(2000).nullable().optional(),
   is_active: z.boolean().default(true),
 });
 
 const updateVendorPackageSchema = createVendorPackageSchema
   .partial()
   .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one vendor package field must be provided",
+    message: "At least one package field must be provided",
   });
 
-// --- Vendors Routes ---
+vendorsRouter.use("/vendors", requireAuth);
+vendorsRouter.use("/vendor-packages", requireAuth);
 
-vendorsRouter.get("/vendors", async (req, res, next) => {
-  try {
-    const q = typeof req.query.q === "string" ? req.query.q : undefined;
-    const vendors = await listVendorsService(q);
-    res.json({ ok: true, data: vendors });
-  } catch (err) {
-    next(err);
-  }
-});
+// --- Vendors ---
+vendorsRouter.get(
+  "/vendors",
+  validateQuery(listVendorsQuerySchema),
+  asyncHandler(vendorsController.listVendors)
+);
 
-vendorsRouter.get("/vendors/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const vendor = await getVendorByIdService(id);
-    res.json({ ok: true, data: vendor });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.get(
+  "/vendors/:id",
+  validateParams(idParamSchema),
+  asyncHandler(vendorsController.getVendorById)
+);
 
-vendorsRouter.post("/vendors", async (req, res, next) => {
-  try {
-    const body = createVendorSchema.parse(req.body);
-    const vendor = await createVendorService(body);
-    res.status(201).json({ ok: true, data: vendor });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.post(
+  "/vendors",
+  validateBody(createVendorSchema),
+  asyncHandler(vendorsController.createVendor)
+);
 
-vendorsRouter.patch("/vendors/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const body = updateVendorSchema.parse(req.body);
-    const vendor = await updateVendorService(id, body);
-    res.json({ ok: true, data: vendor });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.patch(
+  "/vendors/:id",
+  validateParams(idParamSchema),
+  validateBody(updateVendorSchema),
+  asyncHandler(vendorsController.updateVendor)
+);
 
-vendorsRouter.delete("/vendors/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    await deleteVendorService(id);
-    res.json({ ok: true, data: { vendor_id: id } });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.delete(
+  "/vendors/:id",
+  validateParams(idParamSchema),
+  asyncHandler(vendorsController.removeVendor)
+);
 
-// --- Wholesale Vendor Packages Routes ---
+// --- Wholesale Packages ---
+vendorsRouter.get(
+  "/vendor-packages",
+  validateQuery(listVendorPackagesQuerySchema),
+  asyncHandler(vendorsController.listPackages)
+);
 
-vendorsRouter.get("/vendor-packages", async (req, res, next) => {
-  try {
-    const filter = listVendorPackagesQuerySchema.parse(req.query);
-    const packages = await listVendorPackagesService(filter);
-    res.json({ ok: true, data: packages });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.get(
+  "/vendor-packages/:id",
+  validateParams(idParamSchema),
+  asyncHandler(vendorsController.getPackageById)
+);
 
-vendorsRouter.get("/vendor-packages/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const pkg = await getVendorPackageByIdService(id);
-    res.json({ ok: true, data: pkg });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.post(
+  "/vendor-packages",
+  validateBody(createVendorPackageSchema),
+  asyncHandler(vendorsController.createPackage)
+);
 
-vendorsRouter.post("/vendor-packages", async (req, res, next) => {
-  try {
-    const body = createVendorPackageSchema.parse(req.body);
-    const pkg = await createVendorPackageService(body);
-    res.status(201).json({ ok: true, data: pkg });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.patch(
+  "/vendor-packages/:id",
+  validateParams(idParamSchema),
+  validateBody(updateVendorPackageSchema),
+  asyncHandler(vendorsController.updatePackage)
+);
 
-vendorsRouter.patch("/vendor-packages/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    const body = updateVendorPackageSchema.parse(req.body);
-    const pkg = await updateVendorPackageService(id, body);
-    res.json({ ok: true, data: pkg });
-  } catch (err) {
-    next(err);
-  }
-});
-
-vendorsRouter.delete("/vendor-packages/:id", async (req, res, next) => {
-  try {
-    const { id } = idParamSchema.parse(req.params);
-    await deleteVendorPackageService(id);
-    res.json({ ok: true, data: { package_id: id } });
-  } catch (err) {
-    next(err);
-  }
-});
+vendorsRouter.delete(
+  "/vendor-packages/:id",
+  validateParams(idParamSchema),
+  asyncHandler(vendorsController.removePackage)
+);
