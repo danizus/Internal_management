@@ -1,7 +1,5 @@
-export default function HomePage() {
-  return (
-    <div className="p-4">
-      <h1 className="text-xl font-semibold">Home</h1>
-    </div>
-  );
+import { redirect } from "next/navigation";
+
+export default function Home() {
+  redirect("/dashboard");
 }

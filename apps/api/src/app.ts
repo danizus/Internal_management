@@ -7,6 +7,9 @@ import { displayPackagesRouter } from "./routes/displayPackages.js";
 import { clientsRouter } from "./routes/clients.js";
 import { purchasesRouter } from "./routes/purchases.js";
 import { whmcsRouter } from "./routes/whmcs.js";
+import { refundsRouter } from "./routes/refunds.js";
+import { expensesRouter } from "./routes/expenses.js";
+import { financialsRouter } from "./routes/financials.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { globalRateLimiter } from "./middleware/rateLimiter.js";
@@ -38,5 +41,8 @@ app.use("/api", displayPackagesRouter);
 app.use("/api", clientsRouter);
 app.use("/api", purchasesRouter);
 app.use("/api", whmcsRouter);
+app.use("/api", refundsRouter);
+app.use("/api", expensesRouter);
+app.use("/api", financialsRouter);
 
 app.use(errorHandler);

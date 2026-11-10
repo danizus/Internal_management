@@ -5,7 +5,29 @@
 
 BEGIN;
 
--- 1. Insert Countries Lookup
+-- 1. Insert Seed Users for Login Authentication
+-- Plaintext password for both seed users: Password123!
+INSERT INTO users (name, email, password_hash, phone, role, status)
+VALUES
+  (
+    'Admin User',
+    'admin@example.com',
+    'a1b2c3d4e5f60718293a4b5c6d7e8f90:39db16b7a872a4ec181634e45877088ca1af88894e8ec3434b3fa8a056c6a737d7956e3ed13047e3525f909d4c79866f87a29f847b4e9d8ae915cddef1d7c9ee',
+    '+14155552671',
+    'admin',
+    TRUE
+  ),
+  (
+    'Daniyal Ahmed',
+    'daniyal@example.com',
+    'a1b2c3d4e5f60718293a4b5c6d7e8f90:39db16b7a872a4ec181634e45877088ca1af88894e8ec3434b3fa8a056c6a737d7956e3ed13047e3525f909d4c79866f87a29f847b4e9d8ae915cddef1d7c9ee',
+    '+923001234567',
+    'staff',
+    TRUE
+  )
+ON CONFLICT (email) DO NOTHING;
+
+-- 2. Insert Countries Lookup
 INSERT INTO countries (country_name, iso_code)
 VALUES
   ('Germany', 'DE'),
@@ -14,7 +36,7 @@ VALUES
   ('Finland', 'FI')
 ON CONFLICT (iso_code) DO NOTHING;
 
--- 2. Insert Upstream Vendors
+-- 3. Insert Upstream Vendors
 INSERT INTO vendors (vendor_name, vendor_website, vendor_rating, vendor_sales_count, notes)
 VALUES
   ('Hetzner', 'https://hetzner.com', 4.80, 1, 'Top tier EU reliability, fast provisioning, NVMe storage'),
@@ -22,7 +44,7 @@ VALUES
   ('OVHcloud', 'https://ovhcloud.com', 4.40, 0, 'Anti-DDoS included, global data centers')
 ON CONFLICT DO NOTHING;
 
--- 3. Insert Wholesale Vendor Packages (Linked to Vendors & Countries)
+-- 4. Insert Wholesale Vendor Packages (Linked to Vendors & Countries)
 INSERT INTO vendor_packages (
   vendor_id,
   country_id,
@@ -93,7 +115,7 @@ VALUES
   )
 ON CONFLICT DO NOTHING;
 
--- 4. Insert Retail Display Packages (Mapped to WHMCS Products)
+-- 5. Insert Retail Display Packages (Mapped to WHMCS Products)
 INSERT INTO display_packages (
   whmcs_pid,
   vendor_id,
@@ -150,14 +172,14 @@ VALUES
   )
 ON CONFLICT (whmcs_pid) DO NOTHING;
 
--- 5. Insert Sample Clients
+-- 6. Insert Sample Clients
 INSERT INTO clients (whmcs_client_id, client_name, client_email, client_phone, company_name, status)
 VALUES
   (15, 'Daniyal Ahmed', 'daniyal@example.com', '+923001234567', 'CloudTech Ltd', 'active'),
   (16, 'Acme Corp Admin', 'billing@acme.com', '+14155552671', 'Acme Corporation', 'active')
 ON CONFLICT (whmcs_client_id) DO NOTHING;
 
--- 6. Insert Sample Purchases (1 Active, 1 Pending Fulfillment)
+-- 7. Insert Sample Purchases (1 Active, 1 Pending Fulfillment)
 INSERT INTO purchases (
   whmcs_order_id,
   whmcs_service_id,

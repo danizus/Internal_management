@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AppShell } from "@/components/app-shell";
 import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
-  title: "Tam VPS Reseller Platform",
-  description: "VPS Reseller Directory & WHMCS Management Platform",
+  title: "Tam",
+  description: "Tam reseller console",
 };
 
 export default function RootLayout({
@@ -14,11 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
+    <html lang="en" className="dark">
+      <body className="bg-slate-950 text-slate-100 antialiased min-h-screen">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

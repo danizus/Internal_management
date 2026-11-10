@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { Users, Search, Plus, X, Building, Mail, Phone, ShoppingCart } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Client {
   client_id: string;
@@ -116,6 +118,7 @@ export default function ClientsPage() {
   }
 
   async function handleDelete(clientId: string) {
+    if (!confirm("Are you sure you want to delete this client?")) return;
     setErrorMsg(null);
     const res = await fetch(`/api/clients/${clientId}`, {
       method: "DELETE",
@@ -129,33 +132,33 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-neutral-900">
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
             Clients Management
           </h1>
-          <p className="text-xs md:text-sm text-neutral-500">
-            Track customers, WHMCS Client IDs, active VPS services, and contact info.
+          <p className="text-sm text-slate-400 mt-1">
+            Track customers, WHMCS Client IDs, active VPS services, and contact info
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
           onClick={openCreateModal}
-          className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-800"
+          className="w-full sm:w-auto cursor-pointer bg-primary text-white hover:bg-primary/90 font-medium gap-1.5"
         >
-          + Add Client
-        </button>
+          <Plus className="size-4" /> Add Client
+        </Button>
       </div>
 
       {errorMsg && (
-        <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs md:text-sm flex justify-between items-center">
+        <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm flex justify-between items-center">
           <span>{errorMsg}</span>
           <button
             type="button"
             onClick={() => setErrorMsg(null)}
-            className="text-red-500 font-bold ml-3"
+            className="text-destructive font-bold ml-3 cursor-pointer"
           >
             ✕
           </button>
@@ -163,18 +166,21 @@ export default function ClientsPage() {
       )}
 
       {/* Filter Bar */}
-      <div className="bg-white p-3.5 rounded-xl border border-neutral-200 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        <input
-          type="text"
-          placeholder="Search client name, email, company, phone..."
-          value={searchQ}
-          onChange={(e) => setSearchQ(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg"
-        />
+      <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 size-4 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search client name, email, company, phone..."
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-800 rounded-lg bg-slate-950 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/60"
+          />
+        </div>
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg bg-white"
+          className="w-full px-3 py-2 text-sm border border-slate-800 rounded-lg bg-slate-950 text-white focus:outline-none focus:border-primary/60"
         >
           <option value="">All Statuses</option>
           <option value="active">Active</option>
@@ -184,15 +190,16 @@ export default function ClientsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-10 text-sm text-neutral-500">
+        <div className="text-center py-12 text-sm text-slate-400">
           Loading clients...
         </div>
       ) : clients.length === 0 ? (
-        <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center space-y-2">
-          <p className="text-sm font-medium text-neutral-700">
+        <div className="bg-slate-900/60 rounded-xl border border-slate-800 p-8 text-center space-y-2">
+          <Users className="size-8 text-slate-500 mx-auto" />
+          <p className="text-sm font-medium text-white">
             No clients found.
           </p>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-slate-400">
             Add a client manually or sync them automatically from WHMCS.
           </p>
         </div>
@@ -203,53 +210,56 @@ export default function ClientsPage() {
             {clients.map((c) => (
               <div
                 key={c.client_id}
-                className="bg-white rounded-xl border border-neutral-200 p-4 space-y-3"
+                className="bg-slate-900/70 rounded-xl border border-slate-800 p-4 space-y-3"
               >
                 <div className="flex justify-between items-start gap-2">
                   <div>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-bold text-neutral-900">
+                      <span className="font-bold text-white text-base">
                         {c.client_name}
                       </span>
                       {c.whmcs_client_id && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                        <span className="text-[11px] px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20 font-mono">
                           WHMCS #{c.whmcs_client_id}
                         </span>
                       )}
                     </div>
                     {c.company_name && (
-                      <p className="text-xs text-neutral-500 mt-0.5">
-                        {c.company_name}
+                      <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                        <Building className="size-3" /> {c.company_name}
                       </p>
                     )}
                   </div>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-semibold capitalize ${
+                    className={`text-xs px-2.5 py-0.5 rounded-full font-semibold capitalize ${
                       c.status === "active"
-                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                         : c.status === "inactive"
-                        ? "bg-neutral-100 text-neutral-700"
-                        : "bg-red-50 text-red-700 border border-red-200"
+                        ? "bg-slate-800 text-slate-300 border border-slate-700"
+                        : "bg-destructive/10 text-destructive border border-destructive/20"
                     }`}
                   >
                     {c.status}
                   </span>
                 </div>
 
-                <div className="space-y-1 text-xs text-neutral-600 bg-neutral-50 p-2.5 rounded-lg">
-                  <div>
-                    <span className="text-neutral-500">Email:</span>{" "}
-                    <span className="font-medium">{c.client_email}</span>
+                <div className="space-y-1.5 text-xs text-slate-300 bg-slate-950/60 p-3 rounded-lg border border-slate-800/60">
+                  <div className="flex items-center gap-1.5">
+                    <Mail className="size-3 text-slate-500 shrink-0" />
+                    <span className="text-slate-400">Email:</span>{" "}
+                    <span className="font-medium text-white">{c.client_email}</span>
                   </div>
                   {c.client_phone && (
-                    <div>
-                      <span className="text-neutral-500">Phone:</span>{" "}
-                      <span className="font-medium">{c.client_phone}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="size-3 text-slate-500 shrink-0" />
+                      <span className="text-slate-400">Phone:</span>{" "}
+                      <span className="font-medium text-white">{c.client_phone}</span>
                     </div>
                   )}
-                  <div>
-                    <span className="text-neutral-500">Orders / Services:</span>{" "}
-                    <span className="font-bold text-neutral-900">
+                  <div className="flex items-center gap-1.5">
+                    <ShoppingCart className="size-3 text-slate-500 shrink-0" />
+                    <span className="text-slate-400">Orders:</span>{" "}
+                    <span className="font-bold text-primary">
                       {c.purchase_count}
                     </span>
                   </div>
@@ -259,14 +269,14 @@ export default function ClientsPage() {
                   <button
                     type="button"
                     onClick={() => openEditModal(c)}
-                    className="font-semibold text-neutral-700"
+                    className="font-semibold text-primary hover:underline cursor-pointer"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(c.client_id)}
-                    className="font-semibold text-red-600"
+                    className="font-semibold text-destructive hover:underline cursor-pointer"
                   >
                     Delete
                   </button>
@@ -276,10 +286,10 @@ export default function ClientsPage() {
           </div>
 
           {/* Desktop Table (>= md) */}
-          <div className="hidden md:block bg-white rounded-xl border border-neutral-200 overflow-x-auto">
+          <div className="hidden md:block bg-slate-900/70 rounded-xl border border-slate-800 overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50/70 text-xs font-semibold text-neutral-600 uppercase">
+                <tr className="border-b border-slate-800 bg-slate-950/60 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   <th className="py-3 px-4">Client & Company</th>
                   <th className="py-3 px-4">WHMCS ID</th>
                   <th className="py-3 px-4">Contact</th>
@@ -288,62 +298,62 @@ export default function ClientsPage() {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-200">
+              <tbody className="divide-y divide-slate-800/60">
                 {clients.map((c) => (
-                  <tr key={c.client_id} className="hover:bg-neutral-50/60">
+                  <tr key={c.client_id} className="hover:bg-slate-800/40 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-neutral-900">
+                      <div className="font-semibold text-white">
                         {c.client_name}
                       </div>
                       {c.company_name && (
-                        <div className="text-xs text-neutral-500">
+                        <div className="text-xs text-slate-400">
                           {c.company_name}
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-xs">
+                    <td className="py-3 px-4 text-xs font-mono">
                       {c.whmcs_client_id ? (
-                        <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                        <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-400 border border-sky-500/20">
                           #{c.whmcs_client_id}
                         </span>
                       ) : (
-                        <span className="text-neutral-400">—</span>
+                        <span className="text-slate-600">—</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-xs">
-                      <div>{c.client_email}</div>
+                      <div className="text-slate-200">{c.client_email}</div>
                       {c.client_phone && (
-                        <div className="text-neutral-500">{c.client_phone}</div>
+                        <div className="text-slate-400">{c.client_phone}</div>
                       )}
                     </td>
                     <td className="py-3 px-4 text-xs">
                       <span
                         className={`inline-block px-2.5 py-0.5 rounded-full font-semibold capitalize ${
                           c.status === "active"
-                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                             : c.status === "inactive"
-                            ? "bg-neutral-100 text-neutral-700"
-                            : "bg-red-50 text-red-700 border border-red-200"
+                            ? "bg-slate-800 text-slate-300 border border-slate-700"
+                            : "bg-destructive/10 text-destructive border border-destructive/20"
                         }`}
                       >
                         {c.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-xs font-bold text-neutral-800">
+                    <td className="py-3 px-4 text-xs font-bold text-white">
                       {c.purchase_count}
                     </td>
                     <td className="py-3 px-4 text-right space-x-3 text-xs">
                       <button
                         type="button"
                         onClick={() => openEditModal(c)}
-                        className="font-semibold text-neutral-700 hover:underline"
+                        className="font-semibold text-primary hover:underline cursor-pointer"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete(c.client_id)}
-                        className="font-semibold text-red-600 hover:underline"
+                        className="font-semibold text-destructive hover:underline cursor-pointer"
                       >
                         Delete
                       </button>
@@ -358,24 +368,24 @@ export default function ClientsPage() {
 
       {/* MODAL: ADD / EDIT CLIENT */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-base font-bold text-neutral-900">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+              <h2 className="text-lg font-bold text-white">
                 {editingClient ? "Edit Client" : "New Client"}
               </h2>
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="text-sm text-neutral-500 font-bold"
+                className="text-slate-400 hover:text-white cursor-pointer"
               >
-                ✕
+                <X className="size-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-3 text-xs">
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
               <div>
-                <label className="block font-medium text-neutral-700 mb-1">
+                <label className="block font-medium text-slate-300 mb-1.5">
                   Client Full Name
                 </label>
                 <input
@@ -384,12 +394,12 @@ export default function ClientsPage() {
                   placeholder="e.g. John Doe"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-slate-700 bg-slate-950 text-white rounded-lg text-sm placeholder:text-slate-500 focus:outline-none focus:border-primary/60"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-neutral-700 mb-1">
+                <label className="block font-medium text-slate-300 mb-1.5">
                   Email Address
                 </label>
                 <input
@@ -398,13 +408,13 @@ export default function ClientsPage() {
                   placeholder="e.g. john@example.com"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                  className="w-full px-3 py-2 border border-slate-700 bg-slate-950 text-white rounded-lg text-sm placeholder:text-slate-500 focus:outline-none focus:border-primary/60"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-medium text-neutral-700 mb-1">
+                  <label className="block font-medium text-slate-300 mb-1.5">
                     WHMCS Client ID
                   </label>
                   <input
@@ -412,17 +422,17 @@ export default function ClientsPage() {
                     placeholder="e.g. 15 (optional)"
                     value={whmcsClientId}
                     onChange={(e) => setWhmcsClientId(e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm font-mono"
+                    className="w-full px-3 py-2 border border-slate-700 bg-slate-950 text-white rounded-lg text-sm font-mono placeholder:text-slate-500 focus:outline-none focus:border-primary/60"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-neutral-700 mb-1">
+                  <label className="block font-medium text-slate-300 mb-1.5">
                     Status
                   </label>
                   <select
                     value={clientStatus}
                     onChange={(e) => setClientStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white text-sm"
+                    className="w-full px-3 py-2 border border-slate-700 bg-slate-950 text-white rounded-lg text-sm focus:outline-none focus:border-primary/60"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -433,7 +443,7 @@ export default function ClientsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-medium text-neutral-700 mb-1">
+                  <label className="block font-medium text-slate-300 mb-1.5">
                     Company Name
                   </label>
                   <input
@@ -441,11 +451,11 @@ export default function ClientsPage() {
                     placeholder="Optional"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-slate-700 bg-slate-950 text-white rounded-lg text-sm placeholder:text-slate-500 focus:outline-none focus:border-primary/60"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-neutral-700 mb-1">
+                  <label className="block font-medium text-slate-300 mb-1.5">
                     Phone
                   </label>
                   <input
@@ -453,25 +463,26 @@ export default function ClientsPage() {
                     placeholder="Optional"
                     value={clientPhone}
                     onChange={(e) => setClientPhone(e.target.value)}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-slate-700 bg-slate-950 text-white rounded-lg text-sm placeholder:text-slate-500 focus:outline-none focus:border-primary/60"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <button
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-neutral-300 rounded-lg font-semibold"
+                  className="cursor-pointer border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="px-4 py-2 bg-neutral-900 text-white rounded-lg font-semibold hover:bg-neutral-800"
+                  className="cursor-pointer bg-primary text-white hover:bg-primary/90 font-medium"
                 >
                   Save Client
-                </button>
+                </Button>
               </div>
             </form>
           </div>
